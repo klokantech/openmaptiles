@@ -107,7 +107,7 @@ RETURNS TABLE(osm_id bigint, geometry geometry, class text, ramp int, oneway int
             service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, z_order
         FROM osm_highway_linestring
-        WHERE NOT is_area AND zoom_level >= 12
+        WHERE NOT is_area AND zoom_level >= 3
         UNION ALL
 
         -- etldoc: osm_railway_linestring_gen3  ->  layer_transportation:z10
@@ -134,7 +134,7 @@ RETURNS TABLE(osm_id bigint, geometry geometry, class text, ramp int, oneway int
             service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, z_order
         FROM osm_railway_linestring
-        WHERE zoom_Level >= 12
+        WHERE zoom_Level >= 3
         UNION ALL
 
         -- NOTE: We limit the selection of polys because we need to be
@@ -150,7 +150,7 @@ RETURNS TABLE(osm_id bigint, geometry geometry, class text, ramp int, oneway int
             FALSE AS is_ramp, FALSE AS is_oneway, z_order
         FROM osm_highway_polygon
         -- We do not want underground pedestrian areas for now
-        WHERE zoom_level >= 12 AND is_area AND COALESCE(layer, 0) >= 0
+        WHERE zoom_level >= 3 AND is_area AND COALESCE(layer, 0) >= 0
     ) AS zoom_levels
     WHERE geometry && bbox
     ORDER BY z_order ASC;

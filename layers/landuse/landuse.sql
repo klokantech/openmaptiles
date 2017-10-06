@@ -79,17 +79,8 @@ RETURNS TABLE(osm_id bigint, geometry geometry, class text) AS $$
         SELECT * FROM landuse_z6
         WHERE zoom_level BETWEEN 6 AND 8 AND scalerank-1 <= zoom_level
         UNION ALL
-        -- etldoc: landuse_z9 -> layer_landuse:z9
-        SELECT * FROM landuse_z9 WHERE zoom_level = 9
-        UNION ALL
-        -- etldoc: landuse_z10 -> layer_landuse:z10
-        SELECT * FROM landuse_z10 WHERE zoom_level = 10
-        UNION ALL
-        -- etldoc: landuse_z11 -> layer_landuse:z11
-        SELECT * FROM landuse_z11 WHERE zoom_level = 11
-        UNION ALL
         -- etldoc: landuse_z12 -> layer_landuse:z12
-        SELECT * FROM landuse_z14 WHERE zoom_level >= 12
+        SELECT * FROM landuse_z14 WHERE zoom_level >= 3
     ) AS zoom_levels
     WHERE geometry && bbox;
 $$ LANGUAGE SQL IMMUTABLE;
