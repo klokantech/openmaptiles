@@ -42,3 +42,22 @@ CREATE OR REPLACE FUNCTION service_value(service TEXT) RETURNS TEXT AS $$
         ELSE NULL
     END;
 $$ LANGUAGE SQL IMMUTABLE STRICT;
+
+-- https://github.com/ClearTables/ClearTables/blob/master/transportation.lua
+CREATE OR REPLACE FUNCTION encode_highway(highway TEXT, layer INTEGER, "level" INTEGER, indoor BOOLEAN) RETURNS BOOLEAN AS $$
+    SELECT (
+        highway = 'footway'
+        AND COALESCE(layer, 0) >=0
+        AND COALESCE("level", 0) >=0
+        AND COALESCE(indoor, FALSE) = FALSE
+    ) OR (
+        highway = 'steps'
+        AND COALESCE(layer, 0) = -1
+        AND COALESCE("level", 0) = -1
+        AND COALESCE(indoor, FALSE) = FALSE
+    )
+    OR highway NOT IN ('footway', 'steps')
+    OR highway IS NULL
+    ;
+$$ LANGUAGE SQL IMMUTABLE CALLED ON NULL INPUT;
+

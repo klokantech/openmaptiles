@@ -141,7 +141,7 @@ ramp int, oneway int, brunnel TEXT, service TEXT) AS $$
             OR zoom_level = 13
                 AND highway_class(highway, public_transport) NOT IN ('track', 'path')
             OR zoom_level >= 14
-        )
+        ) AND encode_highway(highway, layer, "level", indoor)
         UNION ALL
 
         -- etldoc: osm_railway_linestring_gen5  ->  layer_transportation:z8
