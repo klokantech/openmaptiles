@@ -17,7 +17,7 @@ RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de
         when length(coalesce(ref, ''))>0
           then 'road'
       end as network,
-      highway_class(highway) AS class
+      highway_class(highway, '') AS class
     FROM (
 
         -- etldoc: osm_transportation_name_linestring_gen4 ->  layer_transportation_name:z6
@@ -57,7 +57,7 @@ RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de
         FROM osm_transportation_name_linestring
         WHERE zoom_level = 12
             AND LineLabel(zoom_level, COALESCE(NULLIF(name, ''), ref), geometry)
-            AND highway_class(highway) NOT IN ('minor', 'track', 'path')
+            AND highway_class(highway, '') NOT IN ('minor', 'track', 'path')
             AND NOT highway_is_link(highway)
             AND encode_highway(highway, layer, "level", indoor)
         UNION ALL
@@ -77,7 +77,7 @@ RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de
         FROM osm_transportation_name_linestring
         WHERE zoom_level = 13
             AND LineLabel(zoom_level, COALESCE(NULLIF(name, ''), ref), geometry)
-            AND highway_class(highway) NOT IN ('track', 'path')
+            AND highway_class(highway, '') NOT IN ('track', 'path')
             AND encode_highway(highway, layer, "level", indoor)
         UNION ALL
 
