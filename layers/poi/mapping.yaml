@@ -76,6 +76,8 @@ def_poi_mapping_highway: &poi_mapping_highway
 # historic values , see http://taginfo.openstreetmap.org/keys/historic#values
 def_poi_mapping_historic: &poi_mapping_historic
   - monument
+  - castle
+  - ruins
 
 # landuse values , see http://taginfo.openstreetmap.org/keys/landuse#values
 def_poi_mapping_landuse: &poi_mapping_landuse
@@ -327,6 +329,9 @@ tables:
     - name: funicular
       key: funicular
       type: string
+    - name: information
+      key: information
+      type: string
     mapping:
       aerialway: *poi_mapping_aerialway
       amenity: *poi_mapping_amenity
@@ -370,6 +375,9 @@ tables:
       type: string
     - name: funicular
       key: funicular
+      type: string
+    - name: information
+      key: information
       type: string
     mapping:
       aerialway: *poi_mapping_aerialway

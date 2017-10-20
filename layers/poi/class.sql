@@ -38,8 +38,8 @@ RETURNS TEXT AS $$
         WHEN subclass IN ('fast_food','food_court') THEN 'fast_food'
         WHEN subclass IN ('park','bbq') THEN 'park'
         WHEN subclass IN ('bus_stop','bus_station') THEN 'bus'
-        -- because 'station' might be from both aeroway and railway
         WHEN (subclass='station' AND mapping_key = 'railway') OR subclass IN ('halt', 'tram_stop', 'subway') THEN 'railway'
+        WHEN (subclass='station' AND mapping_key = 'aerialway') THEN 'aerialway'
         WHEN subclass IN ('camp_site','caravan_site') THEN 'campsite'
         WHEN subclass IN ('laundry','dry_cleaning') THEN 'laundry'
         WHEN subclass IN ('supermarket','deli','delicatessen','department_store','greengrocer','marketplace') THEN 'grocery'
@@ -63,6 +63,7 @@ RETURNS TEXT AS $$
         WHEN subclass IN ('accessories','antiques','art','artwork','gallery','arts_centre') THEN 'art_gallery'
         WHEN subclass IN ('bag','clothes') THEN 'clothing_store'
         WHEN subclass IN ('swimming_area','swimming') THEN 'swimming'
+        WHEN subclass IN ('castle','ruins') THEN 'castle'
         ELSE subclass
     END;
 $$ LANGUAGE SQL IMMUTABLE;
