@@ -14,9 +14,8 @@ before_install:
 - sudo service docker restart
 - docker-compose -v
 - docker -v
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y gzip
+- sudo apt-get -qq update
+- sudo apt-get install -y gzip
 script:
 - sudo service docker restart
 - docker-compose config
@@ -24,4 +23,4 @@ script:
 - sudo ./sample/deploy.sh
 env:
   global:
-    secure: p5xm5zURxzVRSSg/7WkPrymy0t2+brGWt6f/fZZMjdDy5sSoJXnMH6EagcFWhShp6P4chf65dbb/EXiZjMS1KM1t3Pcn2WWaaqQgVMNLQk6g3XZlI8NN9sA+FC3wb5OW3JYIdfNUTYE1gA0BF1qKhq+I+x3dVqxKId0vn4Kyv6G0eOA/Un2yDyfiLrwQU+tBvUvZ8ixCjX+85/u6r7tS6Q6ubreQ1bukXDG9a0M2NEurg9eNe0AouQmkHCD9Y5POqMY7S5BqpG7rlFtMWy+RFbnaSHPd5QH5dmnQULoJP2j+qAHKFCoDWOEl4TxOZsT2HRMA5kovFOV+KWR3gsO6zEA5GNx0hKrrEimZLd+GQ7BuJtSkdMHkUPWSxNOJ5h0zwYXgvK35BjOvYoaTodvTdh6YN6Ht0wiydwNyV3YTez2+CflO7MTvgOHvws5Iwfn1QO5DOJ/8UjFY1HRtVqFfHh4P4Sqmsbjj24EWMr71Kk+3rZFI4xAUB7pSYVz3IFQi4heEqVnDvOH8MmaYmnBFcdJZwxtjsfIiJTvjMKW+4I5n9OjmT1HAN6/7gViwLTEG4jcYeuQtYekF5rA+igWHo398rFzCUPoBCAgE3K19XEw6TZuYZ8kqnWVnPa73pIz11yZEz+AS5fCASvC0TkPX6j3XywFDT7qgricYWRBnHmc=
+    secure: Z4ZrtZ0BSyJjpY4MUwdZJMy6sayK/D8iWxqjydw506DOpeE6YEAW9LUpP8QikN4q7d4bwLH/VajnTETaLSHTr+GMsbDv+IwIBITLd7KB9pGyDMRvUJN9XUevWR0evt09q/U8zfWR3jnsJkZ3zQGj/LLVhfvyQJ/FPjlTJ1ULTVY5HWEQJ2xiQ/sOOjYDN7TzOoYMODzELK4ID7KILuqxWnnYJO6LtY2jJ68pP5Iq6H6YeOnxSKI1kkJBOBxTRnqOqytocbLAZiw99qWOpn27annTfLKDd8H+ogRFlVWl1IOxGGADPrY83Rj4UM3Ap8cK1OauwvQemVItjGYocp6qSd3Q4fjrQxBBP4KOxkH9WYlXwsFxXB+SqBmzqe0tyAecPRX88bmoiXqJZYuUrYJlYMNXTtxidgqfEVTRUwbHiN3+fr1BNeoXDV1DyDLIZwdZgoITRGXW+EX0T6O1fHhaGo0I8dsthCbDNQdcpHultHd1RZVoyEmoKxLRYVXhvI4SGm9XES7qBOy5jHOUzuSr1kWr6bxAWvme6mWh83mwOI2hQTYkVD9mKMOrZsGiNyMX86Guq9UKHklDkt+iUt5TosJW9eZCuCcL6d/ph7nnBqmIt3RqhUkAAuN2A4/fywDKOqHX+0wapH+HT/erQSyi2ZcqDSUE1L3RvW7Cf8R0wOk=
