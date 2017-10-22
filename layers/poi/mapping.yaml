@@ -332,6 +332,9 @@ tables:
     - name: information
       key: information
       type: string
+    - name: uic_ref
+      key: uic_ref
+      type: string
     mapping:
       aerialway: *poi_mapping_aerialway
       amenity: *poi_mapping_amenity
@@ -378,6 +381,9 @@ tables:
       type: string
     - name: information
       key: information
+      type: string
+    - name: uic_ref
+      key: uic_ref
       type: string
     mapping:
       aerialway: *poi_mapping_aerialway
