@@ -65,28 +65,30 @@ RETURNS TABLE(osm_id bigint, geometry geometry, class text) AS $$
             NULLIF(leisure, '')
         ) AS class
         FROM (
-        -- etldoc: landuse_z4 -> layer_landuse:z4
-        SELECT * FROM landuse_z4
-        WHERE zoom_level = 4
-        UNION ALL
         -- etldoc: landuse_z5 -> layer_landuse:z5
         SELECT * FROM landuse_z5
-        WHERE zoom_level = 5
+        WHERE zoom_level = 3
         UNION ALL
         -- etldoc: landuse_z6 -> layer_landuse:z6
         -- etldoc: landuse_z6 -> layer_landuse:z7
         -- etldoc: landuse_z6 -> layer_landuse:z8
         SELECT * FROM landuse_z6
-        WHERE zoom_level BETWEEN 6 AND 8 AND scalerank-1 <= zoom_level
+        WHERE zoom_level BETWEEN 4 AND 6 AND scalerank-1 <= zoom_level
         UNION ALL
         -- etldoc: landuse_z9 -> layer_landuse:z9
-        SELECT * FROM landuse_z9 WHERE zoom_level = 9
+        SELECT * FROM landuse_z9 WHERE zoom_level = 7
         UNION ALL
         -- etldoc: landuse_z10 -> layer_landuse:z10
-        SELECT * FROM landuse_z10 WHERE zoom_level = 10
+        SELECT * FROM landuse_z10 WHERE zoom_level = 8
         UNION ALL
         -- etldoc: landuse_z11 -> layer_landuse:z11
-        SELECT * FROM landuse_z11 WHERE zoom_level = 11
+        SELECT * FROM landuse_z11 WHERE zoom_level = 9
+        UNION ALL
+        -- etldoc: landuse_z12 -> layer_landuse:z12
+        SELECT * FROM landuse_z12 WHERE zoom_level = 10
+        UNION ALL
+        -- etldoc: landuse_z13 -> layer_landuse:z13
+        SELECT * FROM landuse_z13 WHERE zoom_level = 11
         UNION ALL
         -- etldoc: landuse_z12 -> layer_landuse:z12
         SELECT * FROM landuse_z14 WHERE zoom_level >= 12
