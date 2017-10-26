@@ -34,6 +34,29 @@ RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de
                 AND zoom_level >= 14
 
         UNION ALL
+        -- etldoc: osm_poi_ferry_point ->  layer_poi:z12
+        -- etldoc: osm_poi_ferry_point ->  layer_poi:z13
+        -- etldoc: osm_poi_ferry_point ->  layer_poi:z14_
+        SELECT
+            null AS id,
+            osm_id,
+            name,
+            name_en,
+            name_de,
+            tags,
+            'ferry_terminal' AS subclass,
+            'amenity' AS mapping_key,
+            NULL as station,
+            NULL as funicular,
+            NULL as information,
+            uic_ref,
+            geometry,
+            NULL as agg_stop
+        FROM osm_poi_ferry_point
+        WHERE geometry && bbox
+            AND zoom_level >= 12
+
+        UNION ALL
         -- etldoc: osm_poi_polygon ->  layer_poi:z12
         -- etldoc: osm_poi_polygon ->  layer_poi:z13
         SELECT *,
