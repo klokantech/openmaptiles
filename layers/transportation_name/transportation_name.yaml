@@ -43,10 +43,38 @@ layer:
       - raceway
       - rail
       - transit
+    subclass:
+      description: |
+          Distinguish more specific classes of path:
+          Subclass is value of the
+          [`highway`](http://wiki.openstreetmap.org/wiki/Key:highway) (for paths).
+      values:
+      - pedestrian
+      - path
+      - footway
+      - cycleway
+      - steps
+      - bridleway
+      - corridor
+      - platform
+    level:
+      description: |
+          Experimental feature, filled only for steps and footways. Original
+          value of [`level`](http://wiki.openstreetmap.org/wiki/Key:level) tag.
+    layer:
+      description: |
+          Experimental feature, filled only for steps and footways. Original
+          value of [`layer`](http://wiki.openstreetmap.org/wiki/Key:layer) tag.
+    indoor:
+      description: |
+          Experimental feature, filled only for steps and footways. Original
+          value of [`indoor`](http://wiki.openstreetmap.org/wiki/Key:indoor) tag.
+      values:
+      - 1
   datasource:
     geometry_field: geometry
     srid: 900913
-    query: (SELECT geometry, name, name_en, name_de, {name_languages}, ref, ref_length, network::text, class::text FROM layer_transportation_name(!bbox!, z(!scale_denominator!))) AS t
+    query: (SELECT geometry, name, name_en, name_de, {name_languages}, ref, ref_length, network::text, class::text, subclass, layer, level, indoor FROM layer_transportation_name(!bbox!, z(!scale_denominator!))) AS t
 schema:
   - ./network_type.sql
   - ./update_route_member.sql
