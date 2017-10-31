@@ -2,7 +2,7 @@ version: "2"
 services:
   generate-vectortiles:
     environment:
-      BBOX: "5.952882,45.81617,10.49584,47.81126"
+      BBOX: "7.3032,46.64,8.625442,47.434666"
       OSM_MAX_TIMESTAMP : "2017-09-20T20:39:33Z"
       OSM_AREA_NAME: "switzerland"
       MIN_ZOOM: "0"
