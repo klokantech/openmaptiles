@@ -398,38 +398,3 @@ tables:
       sport: *poi_mapping_sport
       tourism: *poi_mapping_tourism
       waterway: *poi_mapping_waterway
-
-  # etldoc: imposm3 -> osm_poi_ferry_point
-  poi_ferry_point:
-    type: point
-    fields:
-    - name: osm_id
-      type: id
-    - name: geometry
-      type: geometry
-    - name: name
-      key: name
-      type: string
-    - name: name_en
-      key: name:en
-      type: string
-    - name: name_de
-      key: name:de
-      type: string
-    - name: tags
-      type: hstore_tags
-    - name: uic_ref
-      key: uic_ref
-      type: string
-    - name: ferry
-      key: ferry
-      type: bool
-    filters:
-      require:
-        ferry: ["yes"]
-        uic_ref: ["__any__"]
-      reject:
-        amenity: ["ferry_terminal"]
-    mapping:
-      public_transport:
-      - stop_position
