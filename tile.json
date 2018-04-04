@@ -1,0 +1,19 @@
+{
+    "attribution": "<a href=\"http://openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> <a href=\"http://www.openstreetmap.org/about/\" target=\"_blank\">&copy; OpenStreetMap contributors</a>",
+    "name": "OpenMapTiles",
+    "format": "pbf",
+    "basename": "tiles.mbtiles",
+    "bounds": [-180, -85.0511, 180, 85.0511],
+    "center": [0, 0, 2],
+    "minzoom": 0,
+    "pixel_scale": "256",
+    "version": "3.3",
+    "tilejson": "2.0.0",
+    "filesize": "1761280",
+    "mtime": "1506087421515",
+    "maxzoom": 14,
+    "type": "baselayer",
+    "id": "openmaptiles",
+    "description": "Development extract, based on http://openmaptiles.org",
+    "tiles": ["https://raw.githubusercontent.com/klokantech/openmaptiles/gh-pages/tiles/{z}/{x}/{y}.pbf"]
+}
