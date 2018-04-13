@@ -45,6 +45,9 @@ tables:
     - name: name_de
       key: name:de
       type: string
+    - name: width
+      key: width
+      type: integer
     - name: tags
       type: hstore_tags
     - *tunnel

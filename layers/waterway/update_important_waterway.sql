@@ -9,6 +9,8 @@ DROP MATERIALIZED VIEW IF EXISTS osm_important_waterway_linestring CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS osm_important_waterway_linestring_gen1 CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS osm_important_waterway_linestring_gen2 CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS osm_important_waterway_linestring_gen3 CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS osm_important_waterway_linestring_gen4 CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS osm_important_waterway_linestring_gen5 CASCADE;
 
 CREATE INDEX IF NOT EXISTS osm_waterway_linestring_waterway_partial_idx
     ON osm_waterway_linestring(waterway)
@@ -21,11 +23,13 @@ CREATE INDEX IF NOT EXISTS osm_waterway_linestring_name_partial_idx
 CREATE MATERIALIZED VIEW osm_important_waterway_linestring AS (
     SELECT
         (ST_Dump(geometry)).geom AS geometry,
-        name, name_en, name_de, tags
+        name, name_en, name_de, tags,
+        width
     FROM (
         SELECT
             ST_LineMerge(ST_Union(geometry)) AS geometry,
-            name, name_en, name_de, slice_language_tags(tags) AS tags
+            name, name_en, name_de, slice_language_tags(tags) AS tags,
+            MAX(width) AS width
         FROM osm_waterway_linestring
         WHERE name <> '' AND waterway = 'river' AND ST_IsValid(geometry)
         GROUP BY name, name_en, name_de, slice_language_tags(tags)
@@ -35,7 +39,7 @@ CREATE INDEX IF NOT EXISTS osm_important_waterway_linestring_geometry_idx ON osm
 
 -- etldoc: osm_important_waterway_linestring -> osm_important_waterway_linestring_gen1
 CREATE MATERIALIZED VIEW osm_important_waterway_linestring_gen1 AS (
-    SELECT ST_Simplify(geometry, 60) AS geometry, name, name_en, name_de, tags
+    SELECT ST_Simplify(geometry, 60) AS geometry, name, name_en, name_de, tags, width
     FROM osm_important_waterway_linestring
     WHERE ST_Length(geometry) > 1000
 );
@@ -43,7 +47,7 @@ CREATE INDEX IF NOT EXISTS osm_important_waterway_linestring_gen1_geometry_idx O
 
 -- etldoc: osm_important_waterway_linestring_gen1 -> osm_important_waterway_linestring_gen2
 CREATE MATERIALIZED VIEW osm_important_waterway_linestring_gen2 AS (
-    SELECT ST_Simplify(geometry, 100) AS geometry, name, name_en, name_de, tags
+    SELECT ST_Simplify(geometry, 100) AS geometry, name, name_en, name_de, tags, width
     FROM osm_important_waterway_linestring_gen1
     WHERE ST_Length(geometry) > 4000
 );
@@ -51,11 +55,27 @@ CREATE INDEX IF NOT EXISTS osm_important_waterway_linestring_gen2_geometry_idx O
 
 -- etldoc: osm_important_waterway_linestring_gen2 -> osm_important_waterway_linestring_gen3
 CREATE MATERIALIZED VIEW osm_important_waterway_linestring_gen3 AS (
-    SELECT ST_Simplify(geometry, 200) AS geometry, name, name_en, name_de, tags
+    SELECT ST_Simplify(geometry, 200) AS geometry, name, name_en, name_de, tags, width
     FROM osm_important_waterway_linestring_gen2
-    WHERE ST_Length(geometry) > 8000
+    WHERE ST_Length(geometry) > 8000 OR width > 5
 );
 CREATE INDEX IF NOT EXISTS osm_important_waterway_linestring_gen3_geometry_idx ON osm_important_waterway_linestring_gen3 USING gist(geometry);
+
+-- etldoc: osm_important_waterway_linestring_gen3 -> osm_important_waterway_linestring_gen4
+CREATE MATERIALIZED VIEW osm_important_waterway_linestring_gen4 AS (
+    SELECT ST_Simplify(geometry, 400) AS geometry, name, name_en, name_de, tags, width
+    FROM osm_important_waterway_linestring_gen3
+    WHERE ST_Length(geometry) > 16000 OR width > 10
+);
+CREATE INDEX IF NOT EXISTS osm_important_waterway_linestring_gen4_geometry_idx ON osm_important_waterway_linestring_gen4 USING gist(geometry);
+
+-- etldoc: osm_important_waterway_linestring_gen4 -> osm_important_waterway_linestring_gen5
+CREATE MATERIALIZED VIEW osm_important_waterway_linestring_gen5 AS (
+    SELECT ST_Simplify(geometry, 800) AS geometry, name, name_en, name_de, tags, width
+    FROM osm_important_waterway_linestring_gen4
+    WHERE ST_Length(geometry) > 32000 OR width > 20
+);
+CREATE INDEX IF NOT EXISTS osm_important_waterway_linestring_gen5_geometry_idx ON osm_important_waterway_linestring_gen5 USING gist(geometry);
 
 -- Handle updates
 
@@ -77,6 +97,8 @@ CREATE OR REPLACE FUNCTION waterway_important.refresh() RETURNS trigger AS
     REFRESH MATERIALIZED VIEW osm_important_waterway_linestring_gen1;
     REFRESH MATERIALIZED VIEW osm_important_waterway_linestring_gen2;
     REFRESH MATERIALIZED VIEW osm_important_waterway_linestring_gen3;
+    REFRESH MATERIALIZED VIEW osm_important_waterway_linestring_gen4;
+    REFRESH MATERIALIZED VIEW osm_important_waterway_linestring_gen5;
     DELETE FROM waterway_important.updates;
     RETURN null;
   END;

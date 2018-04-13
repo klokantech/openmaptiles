@@ -20,11 +20,22 @@ CREATE OR REPLACE VIEW waterway_z4 AS (
     WHERE featurecla = 'River'
 );
 
--- etldoc: ne_10m_rivers_lake_centerlines ->  waterway_z6
+-- etldoc: osm_important_waterway_linestring_gen6 ->  waterway_z6
 CREATE OR REPLACE VIEW waterway_z6 AS (
-    SELECT geometry, 'river'::text AS class, NULL::text AS name, NULL::text AS name_en, NULL::text AS name_de, NULL::hstore AS tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
-    FROM ne_10m_rivers_lake_centerlines
-    WHERE featurecla = 'River'
+    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    FROM osm_important_waterway_linestring_gen5
+);
+
+-- etldoc: osm_important_waterway_linestring_gen5 ->  waterway_z7
+CREATE OR REPLACE VIEW waterway_z7 AS (
+    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    FROM osm_important_waterway_linestring_gen4
+);
+
+-- etldoc: osm_important_waterway_linestring_gen4 ->  waterway_z8
+CREATE OR REPLACE VIEW waterway_z8 AS (
+    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    FROM osm_important_waterway_linestring_gen3
 );
 
 -- etldoc: osm_important_waterway_linestring_gen3 ->  waterway_z9
@@ -66,7 +77,7 @@ CREATE OR REPLACE VIEW waterway_z14 AS (
 );
 
 -- etldoc: layer_waterway[shape=record fillcolor=lightpink, style="rounded,filled",
--- etldoc:     label="layer_waterway | <z3> z3 |<z4_5> z4-z5 |<z6_8> z6-8 | <z9> z9 |<z10> z10 |<z11> z11 |<z12> z12|<z13> z13|<z14> z14+" ];
+-- etldoc:     label="layer_waterway | <z3> z3 |<z4_5> z4-z5 | <z6> z6 | <z7> z7 | <z8> z8 | <z9> z9 |<z10> z10 |<z11> z11 |<z12> z12|<z13> z13|<z14> z14+" ];
 
 CREATE OR REPLACE FUNCTION layer_waterway(bbox geometry, zoom_level int)
 RETURNS TABLE(geometry geometry, class text, name text, name_en text, name_de text, brunnel text, tags hstore) AS $$
@@ -83,8 +94,14 @@ RETURNS TABLE(geometry geometry, class text, name text, name_en text, name_de te
         -- etldoc: waterway_z4 ->  layer_waterway:z4_5
         SELECT * FROM waterway_z4 WHERE zoom_level BETWEEN 4 AND 5
         UNION ALL
-        -- etldoc: waterway_z6 ->  layer_waterway:z6_8
-        SELECT * FROM waterway_z6 WHERE zoom_level BETWEEN 6 AND 8
+        -- etldoc: waterway_z6 ->  layer_waterway:z6
+        SELECT * FROM waterway_z6 WHERE zoom_level = 6
+        UNION ALL
+        -- etldoc: waterway_z7 ->  layer_waterway:z7
+        SELECT * FROM waterway_z7 WHERE zoom_level = 7
+        UNION ALL
+        -- etldoc: waterway_z8 ->  layer_waterway:z8
+        SELECT * FROM waterway_z8 WHERE zoom_level = 8
         UNION ALL
         -- etldoc: waterway_z9 ->  layer_waterway:z9
         SELECT * FROM waterway_z9 WHERE zoom_level = 9
