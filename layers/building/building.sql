@@ -1,3 +1,97 @@
+--\timing on
+
+/*
+ * arbitrary tolerance, i don`t know, how to set zres values to sql script
+ * is possible use another values
+ */
+
+\set tolerance2 10 --for ST_Simplify, clustering a and buffers for removing "slivers"
+
+\set tolerance1 40 --second power of this is used for removing small polygons and small holes
+
+DROP TABLE IF EXISTS osm_building_polygon_gen1; --drop table, if exists
+
+CREATE TABLE osm_building_polygon_gen1
+(
+   osm_id bigint primary key
+   , geometry geometry(GEOMETRY, 3857)
+);
+
+
+/*
+ * grouping buildings on ST_ClusterDBSCAN
+ * ST_ClusterDBSCAN is window function for creating groups of geometries closer
+ * than some distance
+ */
+
+INSERT INTO osm_building_polygon_gen1
+WITH dta AS ( --CTE is used because of optimalization 
+   SELECT osm_id, geometry
+   , ST_ClusterDBSCAN(geometry, eps := :tolerance2, minpoints := 1) over() cid
+   FROM osm_building_polygon
+) 
+SELECT 
+(array_agg(osm_id))[1]
+, ST_Buffer(
+   ST_MemUnion(
+      ST_Buffer(
+	 geometry
+	 , :tolerance2
+	 , 'join=mitre'
+      )
+   )
+   , -:tolerance2
+   , 'join=mitre'
+) geometry
+FROM dta
+GROUP BY cid;
+
+CREATE INDEX on osm_building_polygon_gen1 USING gist(geometry);
+
+--removing holes smaller than
+UPDATE osm_building_polygon_gen1
+SET geometry = (
+   SELECT ST_Collect( --there are some multigeometries in this layer
+      gn
+   )
+   FROM (
+      SELECT
+      COALESCE( --in some cases are "holes" NULL, because all holes are smaller than
+	 ST_MakePolygon(
+	    ST_ExteriorRing(dmp.geom) --exterior ring
+	    , holes 
+	 )
+	 , 
+	 ST_MakePolygon(
+	    ST_ExteriorRing(dmp.geom)
+	 )
+      ) gn
+      FROM
+      ST_Dump(geometry) dmp --1 dump polygons
+      , LATERAL (
+	 SELECT
+	 ST_Accum(
+	    ST_Boundary(rg.geom) --2 create array
+	 ) holes
+	 FROM
+	 ST_DumpRings(dmp.geom) rg --3 from rings
+	 WHERE rg.path[1] > 0 --5 except inner ring
+	 AND ST_Area(rg.geom) >= power(:tolerance1,2) --4 bigger than
+      ) holes
+   ) new_geom
+)
+WHERE ST_NumInteriorRings(geometry) > 0; --only from geometries wih holes
+
+--delete small geometries
+DELETE FROM osm_building_polygon_gen1
+WHERE ST_Area(geometry) < power(:tolerance1,2)
+OR NOT ST_IsValid(geometry); --it was in imposm workflow, maybe it shoul better use ST_MakeValid
+
+--simplify
+UPDATE osm_building_polygon_gen1
+SET geometry = ST_SimplifyPreserveTopology(geometry, :tolerance2::float);
+
+
 -- etldoc: layer_building[shape=record fillcolor=lightpink, style="rounded,filled",
 -- etldoc:     label="layer_building | <z13> z13 | <z14_> z14+ " ] ;
 
