@@ -1,17 +1,16 @@
 --\timing on
 
-/*
- * arbitrary tolerance, i don`t know, how to set zres values to sql script
- * is possible use another values
- */
+--for ST_Simplify, clustering a and buffers for removing "slivers"
+SELECT zres(14) zres14 \gset
 
-\set tolerance2 10 --for ST_Simplify, clustering a and buffers for removing "slivers"
+--second power of this is used for removing small polygons and small holes
+SELECT zres(12) zres12 \gset
 
-\set tolerance1 40 --second power of this is used for removing small polygons and small holes
+DROP TABLE IF EXISTS osm_building_block_gen1; --drop table, if exists
 
-DROP TABLE IF EXISTS osm_building_polygon_gen1; --drop table, if exists
+DROP TABLE IF EXISTS osm_building_polygon_gen1; --drop table, if exists, clean after previous version of sql script
 
-CREATE TABLE osm_building_polygon_gen1
+CREATE TABLE osm_building_block_gen1
 (
    osm_id bigint primary key
    , geometry geometry(GEOMETRY, 3857)
@@ -24,10 +23,10 @@ CREATE TABLE osm_building_polygon_gen1
  * than some distance
  */
 
-INSERT INTO osm_building_polygon_gen1
+INSERT INTO osm_building_block_gen1
 WITH dta AS ( --CTE is used because of optimalization 
    SELECT osm_id, geometry
-   , ST_ClusterDBSCAN(geometry, eps := :tolerance2, minpoints := 1) over() cid
+   , ST_ClusterDBSCAN(geometry, eps := :zres14, minpoints := 1) over() cid
    FROM osm_building_polygon
 ) 
 SELECT 
@@ -36,20 +35,20 @@ SELECT
    ST_MemUnion(
       ST_Buffer(
 	 geometry
-	 , :tolerance2
+	 , :zres14
 	 , 'join=mitre'
       )
    )
-   , -:tolerance2
+   , -:zres14
    , 'join=mitre'
 ) geometry
 FROM dta
 GROUP BY cid;
 
-CREATE INDEX on osm_building_polygon_gen1 USING gist(geometry);
+CREATE INDEX on osm_building_block_gen1 USING gist(geometry);
 
 --removing holes smaller than
-UPDATE osm_building_polygon_gen1
+UPDATE osm_building_block_gen1
 SET geometry = (
    SELECT ST_Collect( --there are some multigeometries in this layer
       gn
@@ -76,20 +75,20 @@ SET geometry = (
 	 FROM
 	 ST_DumpRings(dmp.geom) rg --3 from rings
 	 WHERE rg.path[1] > 0 --5 except inner ring
-	 AND ST_Area(rg.geom) >= power(:tolerance1,2) --4 bigger than
+	 AND ST_Area(rg.geom) >= power(:zres12,2) --4 bigger than
       ) holes
    ) new_geom
 )
 WHERE ST_NumInteriorRings(geometry) > 0; --only from geometries wih holes
 
 --delete small geometries
-DELETE FROM osm_building_polygon_gen1
-WHERE ST_Area(geometry) < power(:tolerance1,2)
+DELETE FROM osm_building_block_gen1
+WHERE ST_Area(geometry) < power(:zres12,2)
 OR NOT ST_IsValid(geometry); --it was in imposm workflow, maybe it shoul better use ST_MakeValid
 
 --simplify
-UPDATE osm_building_polygon_gen1
-SET geometry = ST_SimplifyPreserveTopology(geometry, :tolerance2::float);
+UPDATE osm_building_block_gen1
+SET geometry = ST_SimplifyPreserveTopology(geometry, :zres14::float);
 
 
 -- etldoc: layer_building[shape=record fillcolor=lightpink, style="rounded,filled",
@@ -169,11 +168,11 @@ CREATE OR REPLACE FUNCTION layer_building(bbox geometry, zoom_level int)
 RETURNS TABLE(geometry geometry, osm_id bigint, render_height int, render_min_height int) AS $$
     SELECT geometry, osm_id, render_height, render_min_height
     FROM (
-        -- etldoc: osm_building_polygon_gen1 -> layer_building:z13
+        -- etldoc: osm_building_block_gen1 -> layer_building:z13
         SELECT
             osm_id, geometry,
             NULL::int AS render_height, NULL::int AS render_min_height
-        FROM osm_building_polygon_gen1
+        FROM osm_building_block_gen1
         WHERE zoom_level = 13 AND geometry && bbox
         UNION ALL
         -- etldoc: osm_building_polygon -> layer_building:z14_
