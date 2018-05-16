@@ -1,95 +1,102 @@
+
 --\timing on
 
---for ST_Simplify, clustering a and buffers for removing "slivers"
-SELECT zres(14) zres14 \gset
+--fce, která bude vracet recordset a z tý bude matview
+--
 
---second power of this is used for removing small polygons and small holes
-SELECT zres(12) zres12 \gset
+CREATE OR REPLACE FUNCTION osm_building_block_gen1( )
+RETURNS table(
+   osm_id bigint
+   , geometry geometry
+)
+LANGUAGE plpgsql
+VOLATILE
+ -- common options:  IMMUTABLE  STABLE  STRICT  SECURITY DEFINER
+AS $function$
+DECLARE
+zres14 float := Zres(14);
+zres12 float := Zres(12);
+BEGIN
+   FOR osm_id, geometry IN
+      WITH dta AS ( --CTE is used because of optimalization 
+	 SELECT o.osm_id, o.geometry
+	 , ST_ClusterDBSCAN(o.geometry, eps := zres14, minpoints := 1) over() cid
+	 FROM osm_building_polygon o
+      ) 
+      SELECT 
+      (array_agg(dta.osm_id))[1]
+      , ST_Buffer(
+	 ST_MemUnion(
+	    ST_Buffer(
+	       dta.geometry
+	       , zres14
+	       , 'join=mitre'
+	    )
+	 )
+	 , -zres14
+	 , 'join=mitre'
+      ) geometry
+      FROM dta
+      GROUP BY cid
+      LOOP
+	 --removing holes smaller than
+	 IF ST_NumInteriorRings(geometry) > 0 THEN--only from geometries wih holes
+	    geometry := (
+	       SELECT ST_Collect( --there are some multigeometries in this layer
+		  gn
+	       )
+	       FROM (
+		  SELECT
+		  COALESCE( --in some cases are "holes" NULL, because all holes are smaller than
+		     ST_MakePolygon(
+			ST_ExteriorRing(dmp.geom) --exterior ring
+			, holes 
+		     )
+		     , 
+		     ST_MakePolygon(
+			ST_ExteriorRing(dmp.geom)
+		     )
+		  ) gn
+		  FROM
+		  ST_Dump(geometry) dmp --1 dump polygons
+		  , LATERAL (
+		     SELECT
+		     ST_Accum(
+			ST_Boundary(rg.geom) --2 create array
+		     ) holes
+		     FROM
+		     ST_DumpRings(dmp.geom) rg --3 from rings
+		     WHERE rg.path[1] > 0 --5 except inner ring
+		     AND ST_Area(rg.geom) >= power(zres12,2) --4 bigger than
+		  ) holes
+	       ) new_geom
+	    );
+	 END IF;
+
+	 IF ST_Area(geometry) < power(zres12,2) THEN
+	    CONTINUE;
+	 END IF;
+
+	 --simplify
+	 geometry := ST_SimplifyPreserveTopology(geometry, zres14::float);
+
+	 RETURN NEXT;
+      END LOOP;
+END;
+
+$function$;
+
+DROP MATERIALIZED VIEW IF EXISTS osm_building_block_gen1; --drop table, if exists
 
 DROP TABLE IF EXISTS osm_building_block_gen1; --drop table, if exists
 
 DROP TABLE IF EXISTS osm_building_polygon_gen1; --drop table, if exists, clean after previous version of sql script
 
-CREATE TABLE osm_building_block_gen1
-(
-   osm_id bigint primary key
-   , geometry geometry(GEOMETRY, 3857)
-);
-
-
-/*
- * grouping buildings on ST_ClusterDBSCAN
- * ST_ClusterDBSCAN is window function for creating groups of geometries closer
- * than some distance
- */
-
-INSERT INTO osm_building_block_gen1
-WITH dta AS ( --CTE is used because of optimalization 
-   SELECT osm_id, geometry
-   , ST_ClusterDBSCAN(geometry, eps := :zres14, minpoints := 1) over() cid
-   FROM osm_building_polygon
-) 
-SELECT 
-(array_agg(osm_id))[1]
-, ST_Buffer(
-   ST_MemUnion(
-      ST_Buffer(
-	 geometry
-	 , :zres14
-	 , 'join=mitre'
-      )
-   )
-   , -:zres14
-   , 'join=mitre'
-) geometry
-FROM dta
-GROUP BY cid;
+CREATE MATERIALIZED VIEW osm_building_block_gen1 AS
+SELECT * FROM osm_building_block_gen1();
 
 CREATE INDEX on osm_building_block_gen1 USING gist(geometry);
-
---removing holes smaller than
-UPDATE osm_building_block_gen1
-SET geometry = (
-   SELECT ST_Collect( --there are some multigeometries in this layer
-      gn
-   )
-   FROM (
-      SELECT
-      COALESCE( --in some cases are "holes" NULL, because all holes are smaller than
-	 ST_MakePolygon(
-	    ST_ExteriorRing(dmp.geom) --exterior ring
-	    , holes 
-	 )
-	 , 
-	 ST_MakePolygon(
-	    ST_ExteriorRing(dmp.geom)
-	 )
-      ) gn
-      FROM
-      ST_Dump(geometry) dmp --1 dump polygons
-      , LATERAL (
-	 SELECT
-	 ST_Accum(
-	    ST_Boundary(rg.geom) --2 create array
-	 ) holes
-	 FROM
-	 ST_DumpRings(dmp.geom) rg --3 from rings
-	 WHERE rg.path[1] > 0 --5 except inner ring
-	 AND ST_Area(rg.geom) >= power(:zres12,2) --4 bigger than
-      ) holes
-   ) new_geom
-)
-WHERE ST_NumInteriorRings(geometry) > 0; --only from geometries wih holes
-
---delete small geometries
-DELETE FROM osm_building_block_gen1
-WHERE ST_Area(geometry) < power(:zres12,2)
-OR NOT ST_IsValid(geometry); --it was in imposm workflow, maybe it shoul better use ST_MakeValid
-
---simplify
-UPDATE osm_building_block_gen1
-SET geometry = ST_SimplifyPreserveTopology(geometry, :zres14::float);
-
+CREATE UNIQUE INDEX on osm_building_block_gen1 USING btree(osm_id);
 
 -- etldoc: layer_building[shape=record fillcolor=lightpink, style="rounded,filled",
 -- etldoc:     label="layer_building | <z13> z13 | <z14_> z14+ " ] ;
