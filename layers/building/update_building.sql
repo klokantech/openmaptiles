@@ -93,9 +93,6 @@ $function$;
 
 DROP MATERIALIZED VIEW IF EXISTS osm_building_block_gen1; --drop table, if exists
 
-DROP TABLE IF EXISTS osm_building_block_gen1; --drop table, if exists
-
-DROP TABLE IF EXISTS osm_building_polygon_gen1; --drop table, if exists, clean after previous version of sql script
 
 CREATE MATERIALIZED VIEW osm_building_block_gen1 AS
 SELECT * FROM osm_building_block_gen1();
