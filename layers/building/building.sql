@@ -1,3 +1,5 @@
+--\timing on
+
 -- etldoc: layer_building[shape=record fillcolor=lightpink, style="rounded,filled",
 -- etldoc:     label="layer_building | <z13> z13 | <z14_> z14+ " ] ;
 
@@ -75,11 +77,11 @@ CREATE OR REPLACE FUNCTION layer_building(bbox geometry, zoom_level int)
 RETURNS TABLE(geometry geometry, osm_id bigint, render_height int, render_min_height int) AS $$
     SELECT geometry, osm_id, render_height, render_min_height
     FROM (
-        -- etldoc: osm_building_polygon_gen1 -> layer_building:z13
+        -- etldoc: osm_building_block_gen1 -> layer_building:z13
         SELECT
             osm_id, geometry,
             NULL::int AS render_height, NULL::int AS render_min_height
-        FROM osm_building_polygon_gen1
+        FROM osm_building_block_gen1
         WHERE zoom_level = 13 AND geometry && bbox
         UNION ALL
         -- etldoc: osm_building_polygon -> layer_building:z14_
